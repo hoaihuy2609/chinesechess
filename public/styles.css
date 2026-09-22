@@ -115,13 +115,13 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
 .clock { font-variant-numeric: tabular-nums; font-size: clamp(25px, 2.1vw, 35px); line-height: 1; font-weight: 700; letter-spacing: -.07em; }
 .player-card.current .clock { color: #f2c379; }
 .captured-box { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
-.captured-title { display: block; font-size: 8px; font-weight: 800; letter-spacing: .08em; color: #847a6f; text-transform: uppercase; margin-bottom: 7px; }
-.captured-tray { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; align-items: center; }
-.captured-empty { font-size: 9px; color: #6a6258; font-style: italic; }
-.captured-chip { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-family: "Noto Serif SC", serif; font-size: 11px; font-weight: 700; background: radial-gradient(circle at 36% 30%, #f7ebd5, #dcbe92 70%, #a47644 100%); border: 1px solid #7c4826; box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.4); user-select: none; transition: transform .12s; }
+.captured-title { display: block; font-size: 9px; font-weight: 800; letter-spacing: .1em; color: #91867a; text-transform: uppercase; margin-bottom: 8px; }
+.captured-tray { display: flex; flex-wrap: wrap; gap: 7px; min-height: 32px; align-items: center; }
+.captured-empty { font-size: 10px; color: #736b61; font-style: italic; }
+.captured-chip { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font-family: "Noto Serif SC", serif; font-size: 16px; font-weight: 700; background: radial-gradient(circle at 36% 30%, #fff4df, #e5caa2 68%, #b07e48 100%); border: 1.5px solid #7c4826; box-shadow: 0 2px 4px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.5); user-select: none; transition: transform .12s, filter .12s; }
 .captured-chip.red { color: var(--red-deep); }
 .captured-chip.black { color: var(--black-piece); border-color: #554436; }
-.captured-chip:hover { transform: scale(1.18); z-index: 2; }
+.captured-chip:hover { transform: scale(1.16); z-index: 2; filter: brightness(1.08); }
 .move-panel { flex: 1; min-height: 205px; padding: 16px 0 12px; }
 .section-label { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; color: #91877c; font-size: 9px; letter-spacing: .08em; font-weight: 800; }
 .section-label > span:last-child { color: #72695f; font-size: 8px; }
@@ -226,6 +226,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
   .game-view { padding-top: 13px; }.match-ribbon { margin-bottom: 14px; }.game-status { font-size: 10px; }.game-grid { display: flex; flex-direction: column; gap: 12px; }.board-stage { order: -1; }.board-frame { width: 100%; padding: 10px; border-radius: 10px; }.board-tip { margin-top: 9px; }
   .left-panel { display: grid; grid-template-columns: 1fr 1fr; }.left-panel .move-panel { display: none; }.quick-actions { grid-column: 1 / -1; }.right-panel { display: grid; grid-template-columns: 1fr 1fr; }.right-panel .black-card { grid-row: auto; }.voice-card, .chat-card { min-height: 0; }.chat-messages { max-height: 140px; }
   .piece { font-size: clamp(12px, 5.2vw, 23px); }
+  .captured-chip { width: 26px; height: 26px; font-size: 13px; }
 }
 @media (max-width: 440px) {
   .topbar-center { display: none; }.lobby { padding-top: 42px; }.feature-row { display: grid; grid-template-columns: 1fr 1fr; }.feature-row span:last-child { grid-column: span 2; }.match-ribbon { gap: 7px; }.room-code-display { padding: 7px; }.room-code-display span, .room-code-display i { display: none; }.leave-button { padding-right: 0; }.left-panel, .right-panel { display: flex; }.player-card { padding: 15px; }.move-panel { display: none; }.voice-card, .chat-card { min-height: 180px; }.chat-card { min-height: 200px; }
