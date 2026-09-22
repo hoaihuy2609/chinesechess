@@ -131,7 +131,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
 .square.is-selected:before { opacity: 1; transform: scale(1); }
 .square.legal-target:after { content: ""; position: absolute; width: 17%; aspect-ratio: 1; border-radius: 50%; background: rgba(123, 78, 30, .62); box-shadow: 0 0 0 3px rgba(247,224,178,.2); }
 .square.capture-target:after { content: ""; position: absolute; inset: 11%; border: 2px solid rgba(192, 57, 42, .65); border-radius: 50%; }
-.piece { z-index: 3; position: relative; display: grid; place-items: center; width: 71%; aspect-ratio: 1; border-radius: 50%; color: var(--red-deep); background: radial-gradient(circle at 36% 30%, #fff8e9, #ead7b4 62%, #b7854f 100%); border: 2px solid #8d522b; box-shadow: 0 2px 1px rgba(64,30,10,.4), 0 3px 5px rgba(30,17,7,.18), inset 0 0 0 2px rgba(255,249,230,.6); font: 900 clamp(17px, 3.35vw, 31px) / 1 "Noto Serif SC", serif; transition: transform .12s, filter .12s; }
+.piece { z-index: 3; position: relative; display: grid; place-items: center; width: 80%; aspect-ratio: 1; border-radius: 50%; color: var(--red-deep); background: radial-gradient(circle at 36% 30%, #fff8e9, #ead7b4 62%, #b7854f 100%); border: 2px solid #8d522b; box-shadow: 0 2px 1px rgba(64,30,10,.4), 0 3px 5px rgba(30,17,7,.18), inset 0 0 0 2px rgba(255,249,230,.6); font: 700 clamp(14px, 2.8vw, 27px) / 1 "Noto Serif SC", serif; transition: transform .12s, filter .12s; }
 .square:hover .piece { transform: translateY(-2px); filter: brightness(1.06); }
 .piece.black { color: var(--black-piece); border-color: #5d4030; }
 .piece.last-move { box-shadow: 0 0 0 3px rgba(239, 179, 80, .62), 0 2px 1px rgba(64,30,10,.4), 0 3px 5px rgba(30,17,7,.18), inset 0 0 0 2px rgba(255,249,230,.6); }
@@ -195,7 +195,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
   .lobby { min-height: auto; grid-template-columns: 1fr; gap: 40px; padding: 55px 6px 30px; }.lobby h1 { font-size: clamp(50px, 16vw, 78px); }.lobby-card { padding: 24px 20px; }
   .game-view { padding-top: 13px; }.match-ribbon { margin-bottom: 14px; }.game-status { font-size: 10px; }.game-grid { display: flex; flex-direction: column; gap: 12px; }.board-stage { order: -1; }.board-frame { width: 100%; padding: 10px; border-radius: 10px; }.board-tip { margin-top: 9px; }
   .left-panel { display: grid; grid-template-columns: 1fr 1fr; }.left-panel .move-panel { display: none; }.quick-actions { grid-column: 1 / -1; }.right-panel { display: grid; grid-template-columns: 1fr 1fr; }.right-panel .black-card { grid-row: auto; }.voice-card, .chat-card { min-height: 0; }.chat-messages { max-height: 140px; }
-  .piece { font-size: clamp(15px, 7.1vw, 29px); }
+  .piece { font-size: clamp(12px, 5.2vw, 23px); }
 }
 @media (max-width: 440px) {
   .topbar-center { display: none; }.lobby { padding-top: 42px; }.feature-row { display: grid; grid-template-columns: 1fr 1fr; }.feature-row span:last-child { grid-column: span 2; }.match-ribbon { gap: 7px; }.room-code-display { padding: 7px; }.room-code-display span, .room-code-display i { display: none; }.leave-button { padding-right: 0; }.left-panel, .right-panel { display: flex; }.player-card { padding: 15px; }.move-panel { display: none; }.voice-card, .chat-card { min-height: 180px; }.chat-card { min-height: 200px; }
