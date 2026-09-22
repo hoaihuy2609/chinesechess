@@ -9,8 +9,7 @@ const el = {
   moveList: $('#move-list'), moveCount: $('#move-count'), boardTip: $('#board-tip'),
   draw: $('#draw-button'), resign: $('#resign-button'), newGame: $('#new-game'), chat: $('#chat-messages'), chatForm: $('#chat-form'), chatInput: $('#chat-input'),
   voiceButton: $('#voice-button'), voiceButtonText: $('#voice-button-text'), voiceState: $('#voice-state'), voiceSignal: $('#voice-signal'), voiceDescription: $('#voice-description'), mute: $('#mute-button'), remoteAudio: $('#remote-audio'),
-  connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack'),
-  help: $('#help-button'), modal: $('#modal-backdrop'), modalClose: $('#modal-close'), modalOk: $('#modal-ok')
+  connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack')
 };
 
 const labels = {
@@ -460,10 +459,7 @@ el.draw.addEventListener('click', () => {
   else send({ type: 'offer-draw' });
 });
 el.chatForm.addEventListener('submit', (event) => { event.preventDefault(); const text = el.chatInput.value.trim(); if (text && send({ type: 'chat', text })) el.chatInput.value = ''; });
-el.help.addEventListener('click', () => el.modal.classList.remove('is-hidden'));
-el.modalClose.addEventListener('click', () => el.modal.classList.add('is-hidden'));
-el.modalOk.addEventListener('click', () => el.modal.classList.add('is-hidden'));
-el.modal.addEventListener('click', (event) => { if (event.target === el.modal) el.modal.classList.add('is-hidden'); });
+
 window.addEventListener('beforeunload', () => { shutdownVoice(true); });
 setInterval(renderClocks, 500);
 connect();
