@@ -174,15 +174,17 @@ function renderBoard() {
       const piece = room.board[y][x];
       const isSelected = selected?.x === x && selected?.y === y;
       const target = targets.find((point) => point.x === x && point.y === y);
-      const lastMove = last && ((last.from.x === x && last.from.y === y) || (last.to.x === x && last.to.y === y));
+      const lastTo = last && last.to.x === x && last.to.y === y;
+      const lastFrom = last && last.from.x === x && last.from.y === y;
       const classes = ['square'];
       if (isSelected) classes.push('is-selected');
       if (target) classes.push(piece ? 'capture-target' : 'legal-target');
+      if (lastFrom) classes.push('last-from');
       const dispX = flipped ? 8 - x : x;
       const dispY = flipped ? 9 - y : y;
       const position = `left:calc(6% + (88% * ${dispX} / 8));top:calc(6% + (88% * ${dispY} / 9));`;
       const aria = piece ? `${pieceColorText(piece[0])} ${pieceNames[piece[1]]}` : `Ô ${files[x]}${10 - y}`;
-      html += `<button class="${classes.join(' ')}" style="${position}" data-x="${x}" data-y="${y}" role="gridcell" aria-label="${aria}">${piece ? `<span class="piece ${piece[0] === 'b' ? 'black' : ''} ${lastMove ? 'last-move' : ''}">${labels[piece]}</span>` : ''}</button>`;
+      html += `<button class="${classes.join(' ')}" style="${position}" data-x="${x}" data-y="${y}" role="gridcell" aria-label="${aria}">${piece ? `<span class="piece ${piece[0] === 'b' ? 'black' : ''} ${lastTo ? 'last-move' : ''}">${labels[piece]}</span>` : ''}</button>`;
     }
   }
   el.board.innerHTML = html;
