@@ -75,14 +75,14 @@ function getName() {
 }
 
 function getSavedRoom() {
-  try { return JSON.parse(sessionStorage.getItem(sessionKey)); } catch { return null; }
+  try { return JSON.parse(localStorage.getItem(sessionKey)); } catch { return null; }
 }
 
 function saveRoom(roomId, name) {
-  sessionStorage.setItem(sessionKey, JSON.stringify({ roomId, name }));
+  localStorage.setItem(sessionKey, JSON.stringify({ roomId, name }));
 }
 
-function clearSavedRoom() { sessionStorage.removeItem(sessionKey); }
+function clearSavedRoom() { localStorage.removeItem(sessionKey); }
 
 function handleServerMessage(message) {
   if (message.type === 'room-state') {
