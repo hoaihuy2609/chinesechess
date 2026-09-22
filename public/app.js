@@ -269,19 +269,12 @@ function renderHistory() {
 function coord(point) { return `${files[point.x]}${10 - point.y}`; }
 
 function renderClocks() {
-  if (!state.room) return;
-  const room = state.room; let red = room.clocks.r; let black = room.clocks.b;
-  if (room.status === 'active') {
-    const elapsed = Math.max(0, Date.now() - room.turnStartedAt);
-    if (room.turn === 'r') red = Math.max(0, red - elapsed); else black = Math.max(0, black - elapsed);
-  }
-  el.redClock.textContent = formatClock(red);
-  el.blackClock.textContent = formatClock(black);
+  el.redClock.textContent = '∞';
+  el.blackClock.textContent = '∞';
 }
 
 function formatClock(milliseconds) {
-  const seconds = Math.ceil(milliseconds / 1000); const min = Math.floor(seconds / 60); const sec = String(seconds % 60).padStart(2, '0');
-  return `${min}:${sec}`;
+  return '∞';
 }
 
 function renderActions() {

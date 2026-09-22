@@ -152,7 +152,7 @@ function newRoom(name) {
     players: { r: null, b: null },
     history: [],
     messages: [],
-    clocks: { r: 600000, b: 600000 },
+    clocks: { r: Infinity, b: Infinity },
     turnStartedAt: now,
     createdAt: now,
     updatedAt: now,
@@ -162,17 +162,7 @@ function newRoom(name) {
 
 function advanceClock(room) {
   if (room.status !== 'active') return false;
-  const now = Date.now();
-  const elapsed = now - room.turnStartedAt;
-  if (elapsed <= 0) return false;
-  room.clocks[room.turn] = Math.max(0, room.clocks[room.turn] - elapsed);
-  room.turnStartedAt = now;
-  if (room.clocks[room.turn] === 0) {
-    room.status = 'finished';
-    room.winner = enemyOf(room.turn);
-    room.finishReason = 'Hết giờ';
-    return true;
-  }
+  room.turnStartedAt = Date.now();
   return false;
 }
 
