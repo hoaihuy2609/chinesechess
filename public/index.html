@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#12100f" />
+    <title>Kỳ Đài — Cờ Tướng &amp; Voice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Kỳ Đài - về trang chủ">
+          <span class="brand-mark">棋</span>
+          <span>Kỳ Đài</span>
+        </a>
+        <div class="topbar-center"><span class="connection-dot"></span><span id="connection-label">Đang kết nối…</span></div>
+        <button class="icon-button help-trigger" id="help-button" aria-label="Hướng dẫn chơi">?</button>
+      </header>
+
+      <section class="lobby" id="lobby-view">
+        <div class="lobby-copy">
+          <p class="eyebrow">CỜ TƯỚNG • GỌI GIỌNG NÓI</p>
+          <h1>Vào bàn.<br /><em>Đấu trí.</em></h1>
+          <p class="lobby-lede">Một căn phòng chỉ dành cho hai kỳ thủ — bàn cờ chuẩn, nước đi đồng bộ tức thì và voice chat ngay trong trận.</p>
+          <div class="feature-row">
+            <span><b>01</b> Phòng riêng tư</span>
+            <span><b>02</b> Voice trực tiếp</span>
+            <span><b>03</b> Luật cờ chuẩn</span>
+          </div>
+        </div>
+
+        <div class="lobby-card">
+          <div class="card-grain"></div>
+          <div class="card-heading">
+            <span class="mini-seal">局</span>
+            <div><p>PHÒNG KỲ</p><h2>Bắt đầu một ván</h2></div>
+          </div>
+          <label class="field-label" for="player-name">Tên hiển thị</label>
+          <input class="text-field" id="player-name" maxlength="20" placeholder="Ví dụ: Minh" autocomplete="nickname" />
+          <div class="lobby-actions">
+            <button class="primary-button" id="create-room"><span>Tạo bàn mới</span><i>→</i></button>
+            <div class="or-line"><span>hoặc</span></div>
+            <label class="field-label" for="room-code">Có mã mời?</label>
+            <div class="join-row">
+              <input class="text-field room-input" id="room-code" maxlength="5" placeholder="ABCDE" autocomplete="off" />
+              <button class="secondary-button" id="join-room">Vào bàn</button>
+            </div>
+          </div>
+          <p class="privacy-note"><span>✦</span> Không cần tài khoản. Mã phòng chỉ dùng cho trận này.</p>
+        </div>
+      </section>
+
+      <section class="game-view is-hidden" id="game-view">
+        <div class="match-ribbon">
+          <button class="room-code-display" id="copy-room" title="Sao chép mã phòng"><span>PHÒNG</span><strong id="room-code-display">—</strong><i>⧉</i></button>
+          <div class="game-status" id="game-status">Đang chuẩn bị bàn cờ</div>
+          <button class="leave-button" id="leave-room">Rời bàn</button>
+        </div>
+
+        <div class="game-grid">
+          <aside class="side-panel left-panel">
+            <section class="player-card red-card" id="red-player-card">
+              <div class="player-top"><span class="color-orb red-orb"></span><span class="seat-label">QUÂN ĐỎ</span><span class="you-tag" id="red-you-tag">BẠN</span></div>
+              <h3 id="red-player-name">Đang chờ</h3>
+              <div class="clock" id="red-clock">10:00</div>
+            </section>
+
+            <section class="move-panel">
+              <div class="section-label"><span>LỊCH SỬ NƯỚC ĐI</span><span id="move-count">0 NƯỚC</span></div>
+              <ol class="move-list" id="move-list"><li class="empty-list">Nước đi sẽ hiện tại đây.</li></ol>
+            </section>
+
+            <section class="quick-actions">
+              <button id="new-game" class="is-hidden">Ván mới</button>
+              <button id="draw-button">Đề nghị hòa</button>
+              <button id="resign-button" class="danger-action">Xin thua</button>
+            </section>
+          </aside>
+
+          <section class="board-stage">
+            <div class="board-frame">
+              <div class="board-top-decoration"><span>楚 河</span><span>漢 界</span></div>
+              <div class="xiangqi-board" id="xiangqi-board" aria-label="Bàn cờ tướng" role="grid"></div>
+            </div>
+            <p class="board-tip" id="board-tip">Chạm quân cờ, rồi chạm ô muốn đi.</p>
+          </section>
+
+          <aside class="side-panel right-panel">
+            <section class="player-card black-card" id="black-player-card">
+              <div class="player-top"><span class="color-orb black-orb"></span><span class="seat-label">QUÂN ĐEN</span><span class="you-tag" id="black-you-tag">BẠN</span></div>
+              <h3 id="black-player-name">Đang chờ đối thủ</h3>
+              <div class="clock" id="black-clock">10:00</div>
+            </section>
+
+            <section class="voice-card">
+              <div class="voice-heading"><div><span class="section-kicker">VOICE CHAT</span><h3>Trò chuyện trong ván</h3></div><span class="voice-signal" id="voice-signal"></span></div>
+              <p id="voice-description">Vào đủ hai người để bật voice chat.</p>
+              <button class="voice-button" id="voice-button"><span class="mic-icon">⌁</span><span id="voice-button-text">Bật voice chat</span></button>
+              <div class="voice-meta"><span id="voice-state">Chưa kết nối</span><button id="mute-button" disabled>Tắt mic</button></div>
+            </section>
+
+            <section class="chat-card">
+              <div class="section-label"><span>TRAO ĐỔI</span><span class="chat-live">LIVE</span></div>
+              <div class="chat-messages" id="chat-messages"><p class="empty-chat">Chưa có lời nhắn nào.</p></div>
+              <form class="chat-form" id="chat-form">
+                <input id="chat-input" maxlength="240" placeholder="Nhắn một câu…" autocomplete="off" />
+                <button aria-label="Gửi tin nhắn" type="submit">↑</button>
+              </form>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop is-hidden" id="modal-backdrop" role="presentation">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button class="modal-close" id="modal-close" aria-label="Đóng">×</button>
+        <p class="eyebrow">KỲ ĐÀI</p>
+        <h2 id="modal-title">Hướng dẫn nhanh</h2>
+        <p>Chọn quân rồi chọn điểm đến. Hệ thống tự chặn nước đi sai luật và nước để lộ Tướng.</p>
+        <div class="help-rules"><span><b>10:00</b>Mỗi bên có 10 phút</span><span><b>⌁</b>Voice chat chỉ truyền âm thanh</span><span><b>♙</b>Đỏ đi trước</span></div>
+        <button class="primary-button full-button" id="modal-ok">Đã hiểu, vào trận</button>
+      </section>
+    </div>
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+    <audio id="remote-audio" autoplay></audio>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
