@@ -9,7 +9,10 @@ const el = {
   moveList: $('#move-list'), moveCount: $('#move-count'), boardTip: $('#board-tip'),
   draw: $('#draw-button'), resign: $('#resign-button'), newGame: $('#new-game'), chat: $('#chat-messages'), chatForm: $('#chat-form'), chatInput: $('#chat-input'),
   voiceButton: $('#voice-button'), voiceButtonText: $('#voice-button-text'), voiceState: $('#voice-state'), voiceSignal: $('#voice-signal'), voiceDescription: $('#voice-description'), mute: $('#mute-button'), remoteAudio: $('#remote-audio'),
-  connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack')
+  connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack'),
+  scoreR: $('#score-r'), scoreB: $('#score-b'), scoreDraw: $('#score-draw'),
+  redWins: $('#red-wins'), blackWins: $('#black-wins'),
+  redCaptured: $('#red-captured'), blackCaptured: $('#black-captured')
 };
 
 const labels = {
@@ -127,6 +130,8 @@ function render() {
   el.redCard.classList.toggle('current', room.status === 'active' && room.turn === 'r');
   el.blackCard.classList.toggle('current', room.status === 'active' && room.turn === 'b');
   renderStatus();
+  renderScore();
+  renderCaptured();
   renderBoard();
   renderHistory();
   renderClocks();
@@ -154,6 +159,45 @@ function renderStatus() {
     const player = room.players[room.turn]?.name || 'Đối thủ';
     el.status.textContent = `${player} đang suy nghĩ…`;
   }
+}
+
+const pieceRank = { k: 0, r: 1, c: 2, h: 3, e: 4, a: 5, p: 6 };
+
+function renderScore() {
+  if (!state.room) return;
+  const score = state.room.score || { r: 0, b: 0, draw: 0 };
+  if (el.scoreR) el.scoreR.textContent = score.r ?? 0;
+  if (el.scoreB) el.scoreB.textContent = score.b ?? 0;
+  if (el.redWins) el.redWins.textContent = `${score.r ?? 0} ván`;
+  if (el.blackWins) el.blackWins.textContent = `${score.b ?? 0} ván`;
+  if (el.scoreDraw) {
+    if (score.draw > 0) {
+      el.scoreDraw.textContent = `(${score.draw} hòa)`;
+      el.scoreDraw.classList.remove('is-hidden');
+    } else {
+      el.scoreDraw.classList.add('is-hidden');
+    }
+  }
+}
+
+function renderCaptured() {
+  if (!state.room) return;
+  const captured = state.room.captured || { r: [], b: [] };
+  renderCapturedTray(el.redCaptured, captured.r || []);
+  renderCapturedTray(el.blackCaptured, captured.b || []);
+}
+
+function renderCapturedTray(container, pieces) {
+  if (!container) return;
+  if (!pieces.length) {
+    container.innerHTML = '<span class="captured-empty">Chưa mất</span>';
+    return;
+  }
+  const sorted = [...pieces].sort((a, b) => (pieceRank[a[1]] ?? 99) - (pieceRank[b[1]] ?? 99));
+  container.innerHTML = sorted.map((p) => {
+    const isBlack = p[0] === 'b';
+    return `<span class="captured-chip ${isBlack ? 'black' : 'red'}" title="${pieceColorText(p[0])} ${pieceNames[p[1]]}">${labels[p] || p}</span>`;
+  }).join('');
 }
 
 function boardSvg() {

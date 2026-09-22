@@ -156,7 +156,9 @@ function newRoom(name) {
     turnStartedAt: now,
     createdAt: now,
     updatedAt: now,
-    drawOffer: null
+    drawOffer: null,
+    score: { r: 0, b: 0, draw: 0 },
+    captured: { r: [], b: [] }
   };
 }
 
@@ -183,7 +185,9 @@ function clientState(room, client) {
       clocks: room.clocks,
       turnStartedAt: room.turnStartedAt,
       check: room.status === 'active' && Boolean(findKing(room.board, room.turn) && squareIsAttacked(room.board, findKing(room.board, room.turn), enemyOf(room.turn))),
-      drawOffer: room.drawOffer
+      drawOffer: room.drawOffer,
+      captured: room.captured,
+      score: room.score
     },
     you: { color, name: client.name || 'Khách' }
   };
@@ -213,9 +217,10 @@ function resetGame(room) {
   room.winner = null;
   room.finishReason = null;
   room.history = [];
-  room.clocks = { r: 600000, b: 600000 };
+  room.clocks = { r: Infinity, b: Infinity };
   room.turnStartedAt = Date.now();
   room.drawOffer = null;
+  room.captured = { r: [], b: [] };
   room.updatedAt = Date.now();
 }
 
@@ -302,6 +307,7 @@ function handleMessage(client, message) {
     if (!result.ok) return send(client, { type: 'error', text: result.reason });
 
     room.board = result.board;
+    if (result.captured) room.captured[enemyOf(client.color)].push(result.captured);
     room.history.push({ from, to, piece: result.piece, captured: result.captured, color: client.color, at: Date.now() });
     const opponent = enemyOf(client.color);
     const opponentKing = findKing(room.board, opponent);
@@ -310,10 +316,12 @@ function handleMessage(client, message) {
       room.status = 'finished';
       room.winner = client.color;
       room.finishReason = 'Bắt Tướng';
+      room.score[client.color] += 1;
     } else if (!hasLegalMove(room.board, opponent)) {
       room.status = 'finished';
       room.winner = client.color;
       room.finishReason = squareIsAttacked(room.board, opponentKing, client.color) ? 'Chiếu bí' : 'Hết nước đi';
+      room.score[client.color] += 1;
     } else {
       room.turn = opponent;
       room.turnStartedAt = Date.now();
@@ -327,14 +335,30 @@ function handleMessage(client, message) {
     room.status = 'finished';
     room.winner = enemyOf(client.color);
     room.finishReason = `${room.players[client.color]?.name || 'Kỳ thủ'} xin thua`;
+    room.score[room.winner] += 1;
     room.updatedAt = Date.now();
     broadcastState(room);
     return;
   }
 
   if (message.type === 'new-game' && client.color && room.status === 'finished') {
+    const prevWinner = room.winner;
+    // Winner gets Red (goes first). Swap if Black won or if draw (alternates).
+    const shouldSwap = prevWinner === 'b' || prevWinner === null;
+    if (shouldSwap) {
+      const rData = room.players.r;
+      room.players.r = room.players.b;
+      room.players.b = rData;
+      const rScore = room.score.r;
+      room.score.r = room.score.b;
+      room.score.b = rScore;
+      for (const c of clients) {
+        if (c.roomId === room.id && c.color) c.color = c.color === 'r' ? 'b' : 'r';
+      }
+    }
     resetGame(room);
-    roomNotice(room, 'Bàn cờ đã được xếp lại cho ván mới.', 'success');
+    const notice = shouldSwap ? 'Đổi màu quân cho ván mới!' : 'Bàn cờ xếp lại — Đỏ tiếp tục đi trước!';
+    roomNotice(room, notice, 'success');
     broadcastState(room);
     return;
   }
@@ -350,6 +374,7 @@ function handleMessage(client, message) {
       room.status = 'finished';
       room.winner = null;
       room.finishReason = 'Hai bên đồng ý hòa';
+      room.score.draw += 1;
     }
     room.drawOffer = null;
     broadcastState(room);
