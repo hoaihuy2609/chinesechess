@@ -186,6 +186,17 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
 .toast.error { border-left-color: #dc6b5b; }.toast.success { border-left-color: #7ebda1; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } }
 
+.victory-overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(7,6,5,.68); backdrop-filter: blur(7px); animation: victoryFadeIn .35s ease-out; overflow: hidden; }
+@keyframes victoryFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.victory-banner { position: relative; z-index: 2; width: min(100%, 430px); padding: 38px 32px 32px; border: 1px solid rgba(239,179,80,.28); border-radius: 18px; background: linear-gradient(145deg, rgba(44,37,31,.98), rgba(23,20,19,.96)); box-shadow: 0 32px 72px rgba(0,0,0,.52), 0 0 0 1px rgba(239,179,80,.08), inset 0 0 30px rgba(239,179,80,.03); text-align: center; animation: bannerPop .48s cubic-bezier(.34,1.56,.64,1); }
+@keyframes bannerPop { from { opacity: 0; transform: scale(.86) translateY(22px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.victory-seal { display: inline-grid; place-items: center; width: 66px; height: 66px; margin-bottom: 20px; border: 1.5px solid rgba(239,179,80,.65); border-radius: 14px; background: rgba(239,179,80,.09); color: #f2c379; font-family: "Noto Serif SC", serif; font-size: 40px; }
+.victory-title { margin: 0 0 9px; font-size: clamp(24px, 5vw, 36px); letter-spacing: -.055em; font-weight: 800; color: var(--ink); }
+.victory-reason { margin: 0 0 26px; color: #a39a8e; font-size: 13px; }
+.victory-btn { justify-content: center; }
+.confetti-particle { position: absolute; top: -12px; animation: confettiFall linear forwards; }
+@keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 75% { opacity: 1; } 100% { transform: translateY(105vh) rotate(680deg); opacity: 0; } }
+
 @media (max-width: 1050px) {
   .game-grid { grid-template-columns: minmax(185px, .7fr) minmax(400px, 1.5fr); }
   .right-panel { display: grid; grid-template-columns: 1fr 1fr; grid-column: 1 / -1; align-items: stretch; }

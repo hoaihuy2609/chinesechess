@@ -133,6 +133,7 @@ function render() {
   renderChat();
   renderVoice();
   renderActions();
+  renderVictory();
 }
 
 function renderStatus() {
@@ -292,6 +293,66 @@ function renderActions() {
   } else if (room.drawOffer === you.color) {
     el.draw.textContent = 'Đã đề nghị hòa'; el.draw.disabled = true;
   } else { el.draw.textContent = 'Đề nghị hòa'; el.draw.disabled = !canAct; }
+}
+
+let victoryOverlay = null;
+
+function renderVictory() {
+  const { room, you } = state;
+  if (room.status !== 'finished') {
+    if (victoryOverlay) { victoryOverlay.remove(); victoryOverlay = null; }
+    return;
+  }
+  if (victoryOverlay) return;
+
+  const isDraw = room.winner === null;
+  const isWinner = you.color && room.winner === you.color;
+  const winnerName = room.winner ? (room.players[room.winner]?.name || (room.winner === 'r' ? 'Đỏ' : 'Đen')) : null;
+
+  victoryOverlay = document.createElement('div');
+  victoryOverlay.className = 'victory-overlay';
+
+  if (isWinner || isDraw) spawnConfetti(victoryOverlay, isDraw ? 28 : 52);
+
+  const banner = document.createElement('div');
+  banner.className = 'victory-banner';
+
+  const seal = document.createElement('div');
+  seal.className = 'victory-seal';
+  seal.textContent = isDraw ? '和' : '勝';
+
+  const title = document.createElement('h2');
+  title.className = 'victory-title';
+  title.textContent = isDraw ? 'Hòa cờ!' : `${winnerName} thắng!`;
+
+  const reason = document.createElement('p');
+  reason.className = 'victory-reason';
+  reason.textContent = room.finishReason || '';
+
+  banner.append(seal, title, reason);
+
+  if (you.color) {
+    const btn = document.createElement('button');
+    btn.className = 'primary-button full-button victory-btn';
+    btn.innerHTML = '<span>Chơi ván mới</span><i>→</i>';
+    btn.addEventListener('click', () => { send({ type: 'new-game' }); });
+    banner.append(btn);
+  }
+
+  victoryOverlay.append(banner);
+  victoryOverlay.addEventListener('click', (e) => { if (e.target === victoryOverlay) { victoryOverlay.remove(); victoryOverlay = null; } });
+  document.body.append(victoryOverlay);
+}
+
+function spawnConfetti(container, count) {
+  const colors = ['#f2c379', '#e09c54', '#efb350', '#d4a574', '#fff3d4', '#c8956a', '#e38a79'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    const size = 4 + Math.random() * 7;
+    p.style.cssText = `left:${Math.random() * 100}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random() * colors.length)]};border-radius:${Math.random() > .45 ? '50%' : '2px'};animation-duration:${2.2 + Math.random() * 2.8}s;animation-delay:${Math.random() * 1.8}s;`;
+    container.append(p);
+  }
 }
 
 function renderChat() {
