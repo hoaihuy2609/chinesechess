@@ -12,7 +12,8 @@ const el = {
   connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack'),
   scoreR: $('#score-r'), scoreB: $('#score-b'), scoreDraw: $('#score-draw'),
   redWins: $('#red-wins'), blackWins: $('#black-wins'),
-  redCaptured: $('#red-captured'), blackCaptured: $('#black-captured')
+  redCaptured: $('#red-captured'), blackCaptured: $('#black-captured'),
+  soundToggle: $('#sound-toggle')
 };
 
 const labels = {
@@ -29,6 +30,103 @@ let state = { room: null, you: { color: null, name: 'Kỳ thủ' } };
 let selected = null;
 let pendingMove = false;
 let chatScrolled = false;
+
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('ky-dai-sound') !== '0';
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playMoveSound() {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(75, now + 0.08);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.09);
+  } catch {}
+}
+
+function playCaptureSound() {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  } catch {}
+}
+
+function playCheckSound() {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const freqs = [146.8, 220.0, 293.7, 369.9];
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.38, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+    masterGain.connect(ctx.destination);
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.985, now + 1.8);
+      const amp = [0.5, 0.3, 0.15, 0.08][idx];
+      gain.gain.setValueAtTime(amp, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 1.85);
+    });
+  } catch {}
+}
+
+function updateSoundButton() {
+  if (!el.soundToggle) return;
+  el.soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+  el.soundToggle.classList.toggle('muted', !soundEnabled);
+  el.soundToggle.title = soundEnabled ? 'Âm thanh: Đang bật (Bấm để tắt)' : 'Âm thanh: Đang tắt (Bấm để bật)';
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('ky-dai-sound', soundEnabled ? '1' : '0');
+  updateSoundButton();
+  if (soundEnabled) playMoveSound();
+}
 
 const voice = {
   stream: null, pc: null, pendingCandidates: [], muted: false, remoteConnected: false, negotiating: false
@@ -88,6 +186,20 @@ function clearSavedRoom() { localStorage.removeItem(sessionKey); }
 
 function handleServerMessage(message) {
   if (message.type === 'room-state') {
+    const prevHistoryLen = state.room?.history?.length || 0;
+    const newHistoryLen = message.room.history?.length || 0;
+    const isNewMove = newHistoryLen > prevHistoryLen && state.room?.id === message.room.id;
+
+    if (isNewMove) {
+      if (message.room.check) {
+        playCheckSound();
+      } else {
+        const lastMove = message.room.history?.at(-1);
+        if (lastMove?.captured) playCaptureSound();
+        else playMoveSound();
+      }
+    }
+
     state = message;
     selected = null;
     pendingMove = false;
@@ -566,7 +678,9 @@ el.draw.addEventListener('click', () => {
   else send({ type: 'offer-draw' });
 });
 el.chatForm.addEventListener('submit', (event) => { event.preventDefault(); const text = el.chatInput.value.trim(); if (text && send({ type: 'chat', text })) el.chatInput.value = ''; });
+if (el.soundToggle) el.soundToggle.addEventListener('click', toggleSound);
 
 window.addEventListener('beforeunload', () => { shutdownVoice(true); });
 setInterval(renderClocks, 500);
+updateSoundButton();
 connect();

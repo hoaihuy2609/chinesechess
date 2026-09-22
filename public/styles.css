@@ -41,6 +41,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e7b169; outline-
 .connection-dot.offline { background: var(--red); box-shadow: 0 0 0 4px rgba(217, 91, 71, .12); }
 .icon-button { appearance: none; width: 34px; height: 34px; border-radius: 50%; color: var(--ink); border: 1px solid var(--line); background: transparent; font-weight: 700; }
 .icon-button:hover { border-color: rgba(239,231,215,.45); background: rgba(255,255,255,.04); }
+.sound-toggle { display: inline-grid; place-items: center; font-size: 14px; cursor: pointer; transition: transform .15s, opacity .15s; }
+.sound-toggle.muted { opacity: .45; filter: grayscale(1); }
 
 .lobby { min-height: calc(100vh - 128px); display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(390px, .8fr); align-items: center; gap: clamp(40px, 9vw, 160px); padding: 42px clamp(0px, 4vw, 60px) 55px; }
 .eyebrow { margin: 0 0 18px; color: #d9a45f; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
