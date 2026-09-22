@@ -166,6 +166,7 @@ function boardSvg() {
 
 function renderBoard() {
   const { room, you } = state;
+  const flipped = you.color === 'b';
   const targets = selected ? pseudoTargets(room.board, selected.x, selected.y) : [];
   const last = room.history.at(-1);
   let html = boardSvg();
@@ -178,7 +179,9 @@ function renderBoard() {
       const classes = ['square'];
       if (isSelected) classes.push('is-selected');
       if (target) classes.push(piece ? 'capture-target' : 'legal-target');
-      const position = `left:calc(6% + (88% * ${x} / 8));top:calc(6% + (88% * ${y} / 9));`;
+      const dispX = flipped ? 8 - x : x;
+      const dispY = flipped ? 9 - y : y;
+      const position = `left:calc(6% + (88% * ${dispX} / 8));top:calc(6% + (88% * ${dispY} / 9));`;
       const aria = piece ? `${pieceColorText(piece[0])} ${pieceNames[piece[1]]}` : `Ô ${files[x]}${10 - y}`;
       html += `<button class="${classes.join(' ')}" style="${position}" data-x="${x}" data-y="${y}" role="gridcell" aria-label="${aria}">${piece ? `<span class="piece ${piece[0] === 'b' ? 'black' : ''} ${lastMove ? 'last-move' : ''}">${labels[piece]}</span>` : ''}</button>`;
     }
