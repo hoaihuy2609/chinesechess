@@ -7,7 +7,7 @@ const el = {
   redName: $('#red-player-name'), blackName: $('#black-player-name'), redClock: $('#red-clock'), blackClock: $('#black-clock'),
   redCard: $('#red-player-card'), blackCard: $('#black-player-card'), redYou: $('#red-you-tag'), blackYou: $('#black-you-tag'),
   moveList: $('#move-list'), moveCount: $('#move-count'), boardTip: $('#board-tip'),
-  draw: $('#draw-button'), resign: $('#resign-button'), newGame: $('#new-game'), chat: $('#chat-messages'), chatForm: $('#chat-form'), chatInput: $('#chat-input'),
+  draw: $('#draw-button'), resign: $('#resign-button'), newGame: $('#new-game'),
   voiceButton: $('#voice-button'), voiceButtonText: $('#voice-button-text'), voiceState: $('#voice-state'), voiceSignal: $('#voice-signal'), voiceDescription: $('#voice-description'), mute: $('#mute-button'), remoteAudio: $('#remote-audio'),
   connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack'),
   scoreR: $('#score-r'), scoreB: $('#score-b'), scoreDraw: $('#score-draw'),
@@ -240,11 +240,6 @@ function handleServerMessage(message) {
     return showToast(message.text, 'error');
   }
   if (message.type === 'notice') return showToast(message.text, message.kind || 'info');
-  if (message.type === 'chat' && state.room) {
-    state.room.messages.push(message.message);
-    renderChat();
-    return;
-  }
   if (message.type === 'signal') handleSignal(message.signal);
 }
 
@@ -274,7 +269,6 @@ function render() {
   renderBoard();
   renderHistory();
   renderClocks();
-  renderChat();
   renderVoice();
   renderActions();
   renderVictory();
@@ -538,21 +532,6 @@ function spawnConfetti(container, count) {
   }
 }
 
-function renderChat() {
-  const messages = state.room?.messages || [];
-  if (!messages.length) { el.chat.innerHTML = '<p class="empty-chat">Chưa có lời nhắn nào.</p>'; return; }
-  el.chat.innerHTML = '';
-  for (const message of messages) {
-    const line = document.createElement('p');
-    line.className = `chat-line ${message.color === 'b' ? 'black' : ''}`;
-    const sender = document.createElement('b'); sender.textContent = `${message.from}:`;
-    line.append(sender, document.createTextNode(` ${message.text}`));
-    el.chat.append(line);
-  }
-  if (!chatScrolled || el.chat.scrollTop + el.chat.clientHeight >= el.chat.scrollHeight - 48) el.chat.scrollTop = el.chat.scrollHeight;
-  chatScrolled = true;
-}
-
 function hasOpponent() { return Boolean(state.room?.players.r && state.room?.players.b && state.you.color); }
 
 function renderVoice() {
@@ -704,7 +683,6 @@ el.draw.addEventListener('click', () => {
   if (state.room?.drawOffer && state.room.drawOffer !== state.you.color) send({ type: 'respond-draw', accept: true });
   else send({ type: 'offer-draw' });
 });
-el.chatForm.addEventListener('submit', (event) => { event.preventDefault(); const text = el.chatInput.value.trim(); if (text && send({ type: 'chat', text })) el.chatInput.value = ''; });
 if (el.soundToggle) el.soundToggle.addEventListener('click', toggleSound);
 
 window.addEventListener('beforeunload', () => { shutdownVoice(true); });
