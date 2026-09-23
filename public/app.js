@@ -33,6 +33,7 @@ let chatScrolled = false;
 
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('ky-dai-sound') !== '0';
+let lastMoveTimestamp = 0;
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -40,10 +41,19 @@ function getAudioContext() {
     if (AudioContext) audioCtx = new AudioContext();
   }
   if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+    audioCtx.resume().catch(() => {});
   }
   return audioCtx;
 }
+
+function unlockAudio() {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+}
+window.addEventListener('pointerdown', unlockAudio, { passive: true });
+window.addEventListener('keydown', unlockAudio, { passive: true });
 
 function playMoveSound() {
   if (!soundEnabled) return;
@@ -54,9 +64,9 @@ function playMoveSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(260, now);
-    osc.frequency.exponentialRampToValueAtTime(75, now + 0.08);
-    gain.gain.setValueAtTime(0.25, now);
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.exponentialRampToValueAtTime(140, now + 0.07);
+    gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -71,17 +81,21 @@ function playCaptureSound() {
   if (!ctx) return;
   try {
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(190, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.13);
+    [0, 0.035].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      const startFreq = i === 0 ? 460 : 320;
+      const endFreq = i === 0 ? 160 : 110;
+      osc.frequency.setValueAtTime(startFreq, now + delay);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + delay + 0.09);
+      gain.gain.setValueAtTime(i === 0 ? 0.45 : 0.55, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.11);
+    });
   } catch {}
 }
 
@@ -91,25 +105,34 @@ function playCheckSound() {
   if (!ctx) return;
   try {
     const now = ctx.currentTime;
-    const freqs = [146.8, 220.0, 293.7, 369.9];
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.38, now);
-    masterGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    masterGain.connect(ctx.destination);
+    const notes = [
+      { delay: 0, freqs: [587.3, 880, 1174.7], vol: 0.48, dur: 0.9 },
+      { delay: 0.11, freqs: [440, 659.3, 880, 1318.5], vol: 0.65, dur: 1.6 }
+    ];
 
-    freqs.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = idx === 0 ? 'triangle' : 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.985, now + 1.8);
-      const amp = [0.5, 0.3, 0.15, 0.08][idx];
-      gain.gain.setValueAtTime(amp, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 1.85);
+    notes.forEach((chord) => {
+      const t = now + chord.delay;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(chord.vol, t);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, t + chord.dur);
+      masterGain.connect(ctx.destination);
+
+      chord.freqs.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = idx === 0 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.99, t + chord.dur);
+
+        const amp = [0.55, 0.35, 0.2, 0.12][idx] || 0.1;
+        gain.gain.setValueAtTime(amp, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + chord.dur);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + chord.dur + 0.05);
+      });
     });
   } catch {}
 }
@@ -186,18 +209,22 @@ function clearSavedRoom() { localStorage.removeItem(sessionKey); }
 
 function handleServerMessage(message) {
   if (message.type === 'room-state') {
-    const prevHistoryLen = state.room?.history?.length || 0;
-    const newHistoryLen = message.room.history?.length || 0;
-    const isNewMove = newHistoryLen > prevHistoryLen && state.room?.id === message.room.id;
+    const history = message.room.history || [];
+    const lastMove = history.at(-1);
 
-    if (isNewMove) {
-      if (message.room.check) {
+    if (history.length === 0) {
+      lastMoveTimestamp = 0;
+    } else if (lastMove && lastMove.at && lastMove.at !== lastMoveTimestamp && state.room?.id === message.room.id) {
+      lastMoveTimestamp = lastMove.at;
+      if (lastMove.check || message.room.check) {
         playCheckSound();
+      } else if (lastMove.captured) {
+        playCaptureSound();
       } else {
-        const lastMove = message.room.history?.at(-1);
-        if (lastMove?.captured) playCaptureSound();
-        else playMoveSound();
+        playMoveSound();
       }
+    } else if (lastMove && !lastMoveTimestamp) {
+      lastMoveTimestamp = lastMove.at;
     }
 
     state = message;

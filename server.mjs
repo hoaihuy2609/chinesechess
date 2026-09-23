@@ -180,14 +180,15 @@ function clientState(room, client) {
       winner: room.winner,
       finishReason: room.finishReason,
       players: room.players,
-      history: room.history.slice(-16),
+      history: room.history,
       messages: room.messages.slice(-40),
       clocks: room.clocks,
       turnStartedAt: room.turnStartedAt,
-      check: room.status === 'active' && Boolean(findKing(room.board, room.turn) && squareIsAttacked(room.board, findKing(room.board, room.turn), enemyOf(room.turn))),
+      check: room.status === 'active' ? Boolean(findKing(room.board, room.turn) && squareIsAttacked(room.board, findKing(room.board, room.turn), enemyOf(room.turn))) : Boolean(room.history.at(-1)?.check),
       drawOffer: room.drawOffer,
       captured: room.captured,
-      score: room.score
+      score: room.score,
+      moveCount: room.history.length
     },
     you: { color, name: client.name || 'Khách' }
   };
@@ -308,9 +309,10 @@ function handleMessage(client, message) {
 
     room.board = result.board;
     if (result.captured) room.captured[enemyOf(client.color)].push(result.captured);
-    room.history.push({ from, to, piece: result.piece, captured: result.captured, color: client.color, at: Date.now() });
     const opponent = enemyOf(client.color);
     const opponentKing = findKing(room.board, opponent);
+    const isCheck = Boolean(opponentKing && squareIsAttacked(room.board, opponentKing, client.color));
+    room.history.push({ from, to, piece: result.piece, captured: result.captured, color: client.color, check: isCheck, at: Date.now() });
     room.drawOffer = null;
     if (!opponentKing) {
       room.status = 'finished';
@@ -320,7 +322,7 @@ function handleMessage(client, message) {
     } else if (!hasLegalMove(room.board, opponent)) {
       room.status = 'finished';
       room.winner = client.color;
-      room.finishReason = squareIsAttacked(room.board, opponentKing, client.color) ? 'Chiếu bí' : 'Hết nước đi';
+      room.finishReason = isCheck ? 'Chiếu bí' : 'Hết nước đi';
       room.score[client.color] += 1;
     } else {
       room.turn = opponent;
