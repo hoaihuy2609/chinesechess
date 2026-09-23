@@ -8,7 +8,7 @@ const el = {
   redCard: $('#red-player-card'), blackCard: $('#black-player-card'), redYou: $('#red-you-tag'), blackYou: $('#black-you-tag'),
   moveList: $('#move-list'), moveCount: $('#move-count'), boardTip: $('#board-tip'),
   draw: $('#draw-button'), resign: $('#resign-button'), newGame: $('#new-game'),
-  voiceButton: $('#voice-button'), voiceButtonText: $('#voice-button-text'), voiceState: $('#voice-state'), voiceSignal: $('#voice-signal'), voiceDescription: $('#voice-description'), mute: $('#mute-button'), remoteAudio: $('#remote-audio'),
+  voiceControls: $('#voice-controls'), voiceButton: $('#voice-button'), voiceButtonText: $('#voice-button-text'), voiceSignal: $('#voice-signal'), mute: $('#mute-button'), remoteAudio: $('#remote-audio'),
   connection: $('#connection-label'), connectionDot: $('.connection-dot'), toast: $('#toast-stack'),
   scoreR: $('#score-r'), scoreB: $('#score-b'), scoreDraw: $('#score-draw'),
   redWins: $('#red-wins'), blackWins: $('#black-wins'),
@@ -539,22 +539,21 @@ function renderVoice() {
   el.voiceButton.disabled = !opponentAvailable;
   el.mute.disabled = !voice.stream;
   el.mute.textContent = voice.muted ? 'Bật mic' : 'Tắt mic';
+  el.mute.classList.toggle('is-hidden', !voice.stream);
   el.voiceButton.classList.toggle('active', Boolean(voice.stream));
-  el.voiceButtonText.textContent = voice.stream ? 'Tắt voice chat' : 'Bật voice chat';
+  el.voiceButtonText.textContent = voice.stream ? 'Tắt voice' : 'Bật voice';
   el.voiceSignal.className = `voice-signal ${voice.remoteConnected ? 'connected' : voice.stream ? 'connecting' : ''}`;
+
+  let tip = 'Voice chat trực tiếp giữa hai kỳ thủ';
   if (!opponentAvailable) {
-    el.voiceDescription.textContent = state.you.color ? 'Vào đủ hai người để bật voice chat.' : 'Khán giả không thể tham gia voice chat.';
-    el.voiceState.textContent = 'Chưa kết nối';
+    tip = state.you.color ? 'Vào đủ hai người để bật voice chat' : 'Khán giả không thể tham gia voice chat';
   } else if (voice.remoteConnected) {
-    el.voiceDescription.textContent = 'Âm thanh đang truyền trực tiếp, không cần rời bàn cờ.';
-    el.voiceState.textContent = voice.muted ? 'Đã tắt mic của bạn' : 'Đang trò chuyện';
+    tip = voice.muted ? 'Đang kết nối • Mic đang tắt' : 'Đang trò chuyện trực tiếp';
   } else if (voice.stream) {
-    el.voiceDescription.textContent = 'Đang ghép kênh âm thanh với đối thủ…';
-    el.voiceState.textContent = voice.muted ? 'Mic đang tắt' : 'Đang chờ đối thủ';
-  } else {
-    el.voiceDescription.textContent = 'Voice chỉ truyền âm thanh giữa hai kỳ thủ.';
-    el.voiceState.textContent = 'Sẵn sàng bật';
+    tip = 'Đang ghép nối âm thanh với đối thủ…';
   }
+  if (el.voiceControls) el.voiceControls.title = tip;
+  el.voiceButton.title = tip;
 }
 
 async function toggleVoice() {

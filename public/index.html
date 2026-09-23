@@ -21,7 +21,14 @@
           <span>Kỳ Đài</span>
         </a>
         <div class="topbar-center"><span class="connection-dot"></span><span id="connection-label">Đang kết nối…</span></div>
-        <button class="icon-button sound-toggle" id="sound-toggle" aria-label="Bật/Tắt âm thanh" title="Bật/Tắt âm thanh">🔊</button>
+        <div class="topbar-actions">
+          <div class="voice-controls" id="voice-controls" title="Voice chat trực tiếp">
+            <span class="voice-signal" id="voice-signal" title="Tín hiệu voice"></span>
+            <button class="voice-button" id="voice-button"><span class="mic-icon">⌁</span><span id="voice-button-text">Bật voice</span></button>
+            <button class="mute-button is-hidden" id="mute-button" disabled title="Tắt/Bật mic">Tắt mic</button>
+          </div>
+          <button class="icon-button sound-toggle" id="sound-toggle" aria-label="Bật/Tắt âm thanh" title="Bật/Tắt âm thanh">🔊</button>
+        </div>
       </header>
 
       <section class="lobby" id="lobby-view">
@@ -108,13 +115,6 @@
                 <span class="captured-title">Quân đã mất</span>
                 <div class="captured-tray" id="black-captured"></div>
               </div>
-            </section>
-
-            <section class="voice-card">
-              <div class="voice-heading"><div><span class="section-kicker">VOICE CHAT</span><h3>Trò chuyện trong ván</h3></div><span class="voice-signal" id="voice-signal"></span></div>
-              <p id="voice-description">Vào đủ hai người để bật voice chat.</p>
-              <button class="voice-button" id="voice-button"><span class="mic-icon">⌁</span><span id="voice-button-text">Bật voice chat</span></button>
-              <div class="voice-meta"><span id="voice-state">Chưa kết nối</span><button id="mute-button" disabled>Tắt mic</button></div>
             </section>
           </aside>
         </div>
