@@ -579,13 +579,17 @@ function renderVictory() {
   const stats = document.createElement('div');
   stats.className = 'victory-stats';
   stats.innerHTML = `
-    <span class="victory-stats-item">Thời gian: <b>${durationText}</b></span>
-    <span class="victory-stats-sep">|</span>
-    <span class="victory-stats-item"><b>${totalMoves} nước</b></span>
-    <span class="victory-stats-sep">|</span>
-    <span class="victory-stats-item">Đỏ: <b>${redTimeText}</b></span>
-    <span class="victory-stats-sep">|</span>
-    <span class="victory-stats-item">Đen: <b>${blackTimeText}</b></span>
+    <div class="victory-stats-group">
+      <span class="victory-stats-item">Thời gian: <b>${durationText}</b></span>
+      <span class="victory-stats-sep">|</span>
+      <span class="victory-stats-item"><span class="stats-label-moves">Số nước:&nbsp;</span><b>${totalMoves} nước</b></span>
+    </div>
+    <span class="victory-stats-sep victory-stats-mid-sep">|</span>
+    <div class="victory-stats-group">
+      <span class="victory-stats-item">Đỏ: <b>${redTimeText}</b></span>
+      <span class="victory-stats-sep">|</span>
+      <span class="victory-stats-item">Đen: <b>${blackTimeText}</b></span>
+    </div>
   `;
 
   banner.append(seal, title, reason, stats);
