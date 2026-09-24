@@ -445,11 +445,11 @@ function formatStopwatch(seconds) {
 }
 
 function formatThinkTime(sec) {
-  const totalSec = Math.max(1, Math.floor(sec || 0));
+  const totalSec = Math.max(0, Math.floor(sec || 0));
   if (totalSec < 60) return `${totalSec}s`;
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return s > 0 ? `${m}p ${s}s` : `${m}p`;
 }
 
 function formatDuration(totalSec) {
@@ -563,28 +563,29 @@ function renderVictory() {
   const durationText = formatDuration(totalSec);
   const totalMoves = room.history?.length || 0;
 
-  let maxMoveText = null;
+  let redTotalSec = 0;
+  let blackTotalSec = 0;
   if (room.history && room.history.length > 0) {
-    let maxMove = null;
-    let maxMoveIdx = 1;
-    room.history.forEach((m, idx) => {
-      if (!maxMove || (m.thinkTime || 0) > (maxMove.thinkTime || 0)) {
-        maxMove = m;
-        maxMoveIdx = idx + 1;
-      }
+    room.history.forEach((m) => {
+      const sec = m.thinkTime || 0;
+      if (m.color === 'r') redTotalSec += sec;
+      else if (m.color === 'b') blackTotalSec += sec;
     });
-    if (maxMove && (maxMove.thinkTime || 0) > 0) {
-      const colorName = maxMove.color === 'r' ? 'Đỏ' : 'Đen';
-      maxMoveText = `${colorName} (Nước ${maxMoveIdx} • ${formatThinkTime(maxMove.thinkTime)})`;
-    }
   }
+
+  const redTimeText = formatThinkTime(redTotalSec);
+  const blackTimeText = formatThinkTime(blackTotalSec);
 
   const stats = document.createElement('div');
   stats.className = 'victory-stats';
   stats.innerHTML = `
-    <span class="victory-stats-item">⏱ <b>${durationText}</b></span>
-    <span class="victory-stats-item">⚔ <b>${totalMoves} nước</b></span>
-    ${maxMoveText ? `<span class="victory-stats-item">🧠 Nghĩ lâu nhất: <b>${maxMoveText}</b></span>` : ''}
+    <span class="victory-stats-item">Thời gian: <b>${durationText}</b></span>
+    <span class="victory-stats-sep">|</span>
+    <span class="victory-stats-item"><b>${totalMoves} nước</b></span>
+    <span class="victory-stats-sep">|</span>
+    <span class="victory-stats-item">Đỏ: <b>${redTimeText}</b></span>
+    <span class="victory-stats-sep">|</span>
+    <span class="victory-stats-item">Đen: <b>${blackTimeText}</b></span>
   `;
 
   banner.append(seal, title, reason, stats);
