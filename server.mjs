@@ -154,6 +154,7 @@ function newRoom(name) {
     messages: [],
     clocks: { r: Infinity, b: Infinity },
     turnStartedAt: now,
+    gameStartedAt: now,
     createdAt: now,
     updatedAt: now,
     drawOffer: null,
@@ -163,8 +164,6 @@ function newRoom(name) {
 }
 
 function advanceClock(room) {
-  if (room.status !== 'active') return false;
-  room.turnStartedAt = Date.now();
   return false;
 }
 
@@ -184,6 +183,9 @@ function clientState(room, client) {
       messages: room.messages.slice(-40),
       clocks: room.clocks,
       turnStartedAt: room.turnStartedAt,
+      gameStartedAt: room.gameStartedAt || room.createdAt,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
       check: room.status === 'active' ? Boolean(findKing(room.board, room.turn) && squareIsAttacked(room.board, findKing(room.board, room.turn), enemyOf(room.turn))) : Boolean(room.history.at(-1)?.check),
       drawOffer: room.drawOffer,
       captured: room.captured,
@@ -212,6 +214,7 @@ function roomNotice(room, text, kind = 'info') {
 }
 
 function resetGame(room) {
+  const now = Date.now();
   room.board = cloneBoard(INITIAL_BOARD);
   room.turn = 'r';
   room.status = room.players.r && room.players.b ? 'active' : 'waiting';
@@ -219,10 +222,11 @@ function resetGame(room) {
   room.finishReason = null;
   room.history = [];
   room.clocks = { r: Infinity, b: Infinity };
-  room.turnStartedAt = Date.now();
+  room.turnStartedAt = now;
+  room.gameStartedAt = now;
   room.drawOffer = null;
   room.captured = { r: [], b: [] };
-  room.updatedAt = Date.now();
+  room.updatedAt = now;
 }
 
 function leaveRoom(client, announce = true) {
@@ -300,19 +304,21 @@ function handleMessage(client, message) {
   if (message.type === 'move') {
     if (!client.color || room.status !== 'active') return;
     if (client.color !== room.turn) return send(client, { type: 'error', text: 'Chưa đến lượt của bạn.' });
-    if (advanceClock(room)) return broadcastState(room);
     const from = message.from;
     const to = message.to;
     if (!from || !to) return;
     const result = validateMove(room.board, client.color, from, to);
     if (!result.ok) return send(client, { type: 'error', text: result.reason });
 
+    const now = Date.now();
+    const thinkTime = Math.max(1, Math.round((now - (room.turnStartedAt || now)) / 1000));
+
     room.board = result.board;
     if (result.captured) room.captured[enemyOf(client.color)].push(result.captured);
     const opponent = enemyOf(client.color);
     const opponentKing = findKing(room.board, opponent);
     const isCheck = Boolean(opponentKing && squareIsAttacked(room.board, opponentKing, client.color));
-    room.history.push({ from, to, piece: result.piece, captured: result.captured, color: client.color, check: isCheck, at: Date.now() });
+    room.history.push({ from, to, piece: result.piece, captured: result.captured, color: client.color, check: isCheck, thinkTime, at: now });
     room.drawOffer = null;
     if (!opponentKing) {
       room.status = 'finished';
@@ -326,9 +332,9 @@ function handleMessage(client, message) {
       room.score[client.color] += 1;
     } else {
       room.turn = opponent;
-      room.turnStartedAt = Date.now();
+      room.turnStartedAt = now;
     }
-    room.updatedAt = Date.now();
+    room.updatedAt = now;
     broadcastState(room);
     return;
   }
@@ -377,6 +383,7 @@ function handleMessage(client, message) {
       room.winner = null;
       room.finishReason = 'Hai bên đồng ý hòa';
       room.score.draw += 1;
+      room.updatedAt = Date.now();
     }
     room.drawOffer = null;
     broadcastState(room);

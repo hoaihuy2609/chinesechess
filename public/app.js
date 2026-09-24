@@ -437,26 +437,77 @@ function lineCount(board, from, to) {
 function inPalace(color, x, y) { return x >= 3 && x <= 5 && (color === 'r' ? y >= 7 && y <= 9 : y >= 0 && y <= 2); }
 function pieceColorText(color) { return color === 'r' ? 'Đỏ' : 'Đen'; }
 
+function formatStopwatch(seconds) {
+  const totalSec = Math.max(0, Math.floor(seconds || 0));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function formatThinkTime(sec) {
+  const totalSec = Math.max(1, Math.floor(sec || 0));
+  if (totalSec < 60) return `${totalSec}s`;
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function formatDuration(totalSec) {
+  const s = Math.max(1, Math.floor(totalSec || 0));
+  if (s < 60) return `${s} giây`;
+  const m = Math.floor(s / 60);
+  const remSec = s % 60;
+  return remSec > 0 ? `${m} phút ${remSec} giây` : `${m} phút`;
+}
+
 function renderHistory() {
-  const history = state.room.history;
+  const history = state.room?.history || [];
   el.moveCount.textContent = `${history.length} NƯỚC`;
   if (!history.length) { el.moveList.innerHTML = '<li class="empty-list">Nước đi sẽ hiện tại đây.</li>'; return; }
   el.moveList.innerHTML = history.slice().reverse().map((move, index) => {
     const number = history.length - index;
-    const captured = move.captured ? ` × ${labels[move.captured]}` : '';
-    return `<li><span class="move-index">${number}.</span><span>${move.color === 'r' ? 'Đỏ' : 'Đen'} ${labels[move.piece]} ${coord(move.from)} → ${coord(move.to)}${captured}</span></li>`;
+    const captured = move.captured ? ` × ${labels[move.captured] || move.captured}` : '';
+    const timeText = move.thinkTime ? formatThinkTime(move.thinkTime) : '';
+    return `<li><span class="move-index">${number}.</span><span class="move-text">${move.color === 'r' ? 'Đỏ' : 'Đen'} ${labels[move.piece] || move.piece} ${coord(move.from)} → ${coord(move.to)}${captured}</span><span class="move-time">${timeText}</span></li>`;
   }).join('');
 }
 
 function coord(point) { return `${files[point.x]}${10 - point.y}`; }
 
 function renderClocks() {
-  el.redClock.textContent = '∞';
-  el.blackClock.textContent = '∞';
-}
+  if (!state.room) {
+    if (el.redClock) el.redClock.textContent = '00:00';
+    if (el.blackClock) el.blackClock.textContent = '00:00';
+    return;
+  }
 
-function formatClock(milliseconds) {
-  return '∞';
+  const { room } = state;
+  const history = room.history || [];
+
+  if (room.status === 'active') {
+    const now = Date.now();
+    const elapsedSec = Math.max(0, Math.floor((now - (room.turnStartedAt || now)) / 1000));
+    const activeText = formatStopwatch(elapsedSec);
+
+    const lastRedMove = history.slice().reverse().find((m) => m.color === 'r');
+    const lastBlackMove = history.slice().reverse().find((m) => m.color === 'b');
+
+    if (room.turn === 'r') {
+      if (el.redClock) el.redClock.textContent = activeText;
+      if (el.blackClock) el.blackClock.textContent = lastBlackMove ? formatStopwatch(lastBlackMove.thinkTime) : '00:00';
+    } else {
+      if (el.blackClock) el.blackClock.textContent = activeText;
+      if (el.redClock) el.redClock.textContent = lastRedMove ? formatStopwatch(lastRedMove.thinkTime) : '00:00';
+    }
+  } else if (room.status === 'finished') {
+    const lastRedMove = history.slice().reverse().find((m) => m.color === 'r');
+    const lastBlackMove = history.slice().reverse().find((m) => m.color === 'b');
+    if (el.redClock) el.redClock.textContent = lastRedMove ? formatStopwatch(lastRedMove.thinkTime) : '00:00';
+    if (el.blackClock) el.blackClock.textContent = lastBlackMove ? formatStopwatch(lastBlackMove.thinkTime) : '00:00';
+  } else {
+    if (el.redClock) el.redClock.textContent = '00:00';
+    if (el.blackClock) el.blackClock.textContent = '00:00';
+  }
 }
 
 function renderActions() {
@@ -506,13 +557,46 @@ function renderVictory() {
   reason.className = 'victory-reason';
   reason.textContent = room.finishReason || '';
 
-  banner.append(seal, title, reason);
+  const start = room.gameStartedAt || room.createdAt || Date.now();
+  const end = room.updatedAt || Date.now();
+  const totalSec = Math.max(1, Math.round((end - start) / 1000));
+  const durationText = formatDuration(totalSec);
+  const totalMoves = room.history?.length || 0;
+
+  let maxMoveText = null;
+  if (room.history && room.history.length > 0) {
+    let maxMove = null;
+    let maxMoveIdx = 1;
+    room.history.forEach((m, idx) => {
+      if (!maxMove || (m.thinkTime || 0) > (maxMove.thinkTime || 0)) {
+        maxMove = m;
+        maxMoveIdx = idx + 1;
+      }
+    });
+    if (maxMove && (maxMove.thinkTime || 0) > 0) {
+      const colorName = maxMove.color === 'r' ? 'Đỏ' : 'Đen';
+      maxMoveText = `${colorName} (Nước ${maxMoveIdx} • ${formatThinkTime(maxMove.thinkTime)})`;
+    }
+  }
+
+  const stats = document.createElement('div');
+  stats.className = 'victory-stats';
+  stats.innerHTML = `
+    <span class="victory-stats-item">⏱ <b>${durationText}</b></span>
+    <span class="victory-stats-item">⚔ <b>${totalMoves} nước</b></span>
+    ${maxMoveText ? `<span class="victory-stats-item">🧠 Nghĩ lâu nhất: <b>${maxMoveText}</b></span>` : ''}
+  `;
+
+  banner.append(seal, title, reason, stats);
 
   if (you.color) {
     const btn = document.createElement('button');
     btn.className = 'primary-button full-button victory-btn';
     btn.innerHTML = '<span>Chơi ván mới</span><i>→</i>';
-    btn.addEventListener('click', () => { send({ type: 'new-game' }); });
+    btn.addEventListener('click', () => {
+      if (victoryOverlay) { victoryOverlay.remove(); victoryOverlay = null; }
+      send({ type: 'new-game' });
+    });
     banner.append(btn);
   }
 
@@ -685,6 +769,6 @@ el.draw.addEventListener('click', () => {
 if (el.soundToggle) el.soundToggle.addEventListener('click', toggleSound);
 
 window.addEventListener('beforeunload', () => { shutdownVoice(true); });
-setInterval(renderClocks, 500);
+setInterval(renderClocks, 250);
 updateSoundButton();
 connect();
